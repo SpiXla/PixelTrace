@@ -20,7 +20,7 @@ def handle_steganography_hide(
     output_path: str | None = None,
 ) -> str:
     destination = output_path if output_path is not None else default_hidden_output_path(image_path)
-    embed_lsb_data(image_path, "outputs/" + destination, message)
+    embed_lsb_data(image_path, destination, message)
     return f"Hidden data saved in {destination}"
 
 

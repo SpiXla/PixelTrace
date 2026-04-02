@@ -42,4 +42,4 @@ def embed_lsb_data(source_path: str, output_path: str, message: str) -> str:
 
 def default_hidden_output_path(source_path: str) -> str:
     source = Path(source_path)
-    return str(source.with_name(f"outputs/{source.stem}_hidden.png"))
+    return str(Path("outputs") / f"{source.stem}_hidden.png")
