@@ -1,7 +1,11 @@
 import sys
 from typing import Sequence
 
-from src.analyzer import handle_metadata_analysis, handle_steganography_analysis
+from src.analyzer import (
+    handle_metadata_analysis,
+    handle_steganography_analysis,
+    handle_steganography_hide,
+)
 from src.utils import validate_output_path, validate_source_image
 
 
@@ -10,6 +14,7 @@ HELP_TEXT = """Welcome to Image Inspector
 OPTIONS:
     -m  Metadata          Extract metadata from the image (e.g., geolocation, device info)
     -s  Steganography     Detect and extract hidden data from the image using steganography techniques
+    -h, --hide            Hide a message in the image using LSB steganography
     -o  "FileName"        Specify the file name to save output
     --help                Display this help message
 """
@@ -24,6 +29,7 @@ def default_args() -> dict:
         "mode": None,
         "output": None,
         "image_path": None,
+        "message": None,
     }
 
 
@@ -46,7 +52,7 @@ def parse_args(args: Sequence[str] | None = None) -> dict:
         if argument == "--help":
             raise SystemExit("Error: --help must be used alone")
 
-        if argument in ("-m", "-s"):
+        if argument in ("-m", "-s", "-h", "--hide"):
             parsed = parse_mode_argument(parsed, argument)
             index += 1
             continue
@@ -66,13 +72,18 @@ def parse_args(args: Sequence[str] | None = None) -> dict:
 
 
 def parse_mode_argument(parsed: dict, argument: str) -> dict:
-    selected_mode = "metadata" if argument == "-m" else "steganography"
+    if argument == "-m":
+        selected_mode = "metadata"
+    elif argument == "-s":
+        selected_mode = "steganography"
+    else:
+        selected_mode = "hide"
 
     if parsed["mode"] == selected_mode:
         raise SystemExit(f"Error: option '{argument}' cannot be used more than once")
 
     if parsed["mode"] is not None:
-        raise SystemExit("Error: use only one of -m or -s")
+        raise SystemExit("Error: use only one of -m, -s, or -h")
 
     parsed["mode"] = selected_mode
     return parsed
@@ -98,7 +109,11 @@ def parse_output_argument(parsed: dict, arguments: list[str], index: int) -> tup
 
 def parse_image_argument(parsed: dict, argument: str) -> dict:
     if parsed["image_path"] is not None:
-        raise SystemExit("Error: only one image file path is allowed")
+        if parsed["mode"] == "hide" and parsed["message"] is None:
+            parsed["message"] = argument
+            return parsed
+
+        raise SystemExit("Error: too many positional arguments provided")
 
     if not argument.strip():
         raise SystemExit("Error: image file path cannot be empty")
@@ -109,12 +124,15 @@ def parse_image_argument(parsed: dict, argument: str) -> dict:
 
 def validate_args(parsed: dict) -> None:
     if parsed["mode"] is None:
-        raise SystemExit("Error: choose -m or -s")
+        raise SystemExit("Error: choose -m, -s, or -h")
 
     if parsed["image_path"] is None:
         raise SystemExit("Error: missing image file path")
 
     validate_source_image(parsed["image_path"])
+
+    if parsed["mode"] == "hide" and parsed["message"] is None:
+        raise SystemExit("Error: missing message to hide in the image")
 
     if parsed["output"] is not None:
         validate_output_path(parsed["output"])
@@ -124,7 +142,10 @@ def dispatch(parsed: dict) -> str:
     if parsed["mode"] == "metadata":
         return handle_metadata_analysis(parsed["image_path"], parsed["output"])
 
-    return handle_steganography_analysis(parsed["image_path"], parsed["output"])
+    if parsed["mode"] == "steganography":
+        return handle_steganography_analysis(parsed["image_path"], parsed["output"])
+
+    return handle_steganography_hide(parsed["image_path"], parsed["message"], parsed["output"])
 
 
 def main(args: Sequence[str] | None = None) -> int:

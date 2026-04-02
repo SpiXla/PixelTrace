@@ -11,6 +11,8 @@ ENV/
 .pytest_cache/
 .coverage
 htmlcov/
+build/main/
+build/
 
 .mypy_cache/
 .ruff_cache/

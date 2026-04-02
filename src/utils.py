@@ -1,8 +1,6 @@
 from pathlib import Path
 
-
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".webp"}
-
 
 def validate_source_image(image_path: str) -> None:
     source = Path(image_path)

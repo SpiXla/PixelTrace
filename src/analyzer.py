@@ -1,4 +1,5 @@
 from src.metadata_extractor import extract_metadata
+from src.lsb_embedder import default_hidden_output_path, embed_lsb_data
 from src.report_writer import save_report
 from src.steganography_extractor import extract_hidden_data
 
@@ -11,6 +12,16 @@ def handle_metadata_analysis(image_path: str, output_path: str | None = None) ->
 def handle_steganography_analysis(image_path: str, output_path: str | None = None) -> str:
     result = extract_hidden_data(image_path)
     return finalize_result(result, output_path)
+
+
+def handle_steganography_hide(
+    image_path: str,
+    message: str,
+    output_path: str | None = None,
+) -> str:
+    destination = output_path if output_path is not None else default_hidden_output_path(image_path)
+    embed_lsb_data(image_path, "outputs/" + destination, message)
+    return f"Hidden data saved in {destination}"
 
 
 def finalize_result(result: str, output_path: str | None = None) -> str:
