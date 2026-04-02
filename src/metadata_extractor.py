@@ -1,8 +1,5 @@
 from PIL import Image
 
-# python3 main.py -m sample_images/image-example-full.jpeg
-# Exiftool: https://exiftool.org/
-
 EXIF_IFD_TAG = 0x8769
 GPS_INFO_TAG = 0x8825
 DATE_TIME_ORIGINAL_TAG = 0x9003
