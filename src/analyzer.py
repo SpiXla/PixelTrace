@@ -14,6 +14,18 @@ def handle_steganography_analysis(image_path: str, output_path: str | None = Non
     return finalize_result(result, output_path)
 
 
+def handle_combined_analysis(image_path: str, output_path: str | None = None) -> str:
+    metadata_result = extract_metadata(image_path)
+    steganography_result = extract_hidden_data(image_path)
+    combined_result = (
+        "Metadata Analysis\n"
+        f"{metadata_result}\n\n"
+        "Steganography Analysis\n"
+        f"{steganography_result}"
+    )
+    return finalize_result(combined_result, output_path)
+
+
 def handle_steganography_hide(
     image_path: str,
     message: str,

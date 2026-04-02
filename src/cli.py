@@ -2,6 +2,7 @@ import sys
 from typing import Sequence
 
 from src.analyzer import (
+    handle_combined_analysis,
     handle_metadata_analysis,
     handle_steganography_analysis,
     handle_steganography_hide,
@@ -14,6 +15,7 @@ HELP_TEXT = """Welcome to Image Inspector
 OPTIONS:
     -m  Metadata          Extract metadata from the image (e.g., geolocation, device info)
     -s  Steganography     Detect and extract hidden data from the image using steganography techniques
+        You can combine -m and -s in one command
     -h, --hide            Hide a message in the image using LSB steganography
     -o  "FileName"        Specify the file name to save output
     --help                Display this help message
@@ -26,7 +28,7 @@ def print_help() -> None:
 
 def default_args() -> dict:
     return {
-        "mode": None,
+        "modes": set(),
         "output": None,
         "image_path": None,
         "message": None,
@@ -79,13 +81,16 @@ def parse_mode_argument(parsed: dict, argument: str) -> dict:
     else:
         selected_mode = "hide"
 
-    if parsed["mode"] == selected_mode:
+    if selected_mode in parsed["modes"]:
         raise SystemExit(f"Error: option '{argument}' cannot be used more than once")
 
-    if parsed["mode"] is not None:
-        raise SystemExit("Error: use only one of -m, -s, or -h")
+    if selected_mode == "hide" and parsed["modes"]:
+        raise SystemExit("Error: -h cannot be combined with -m or -s")
 
-    parsed["mode"] = selected_mode
+    if selected_mode in {"metadata", "steganography"} and "hide" in parsed["modes"]:
+        raise SystemExit("Error: -h cannot be combined with -m or -s")
+
+    parsed["modes"].add(selected_mode)
     return parsed
 
 
@@ -109,7 +114,7 @@ def parse_output_argument(parsed: dict, arguments: list[str], index: int) -> tup
 
 def parse_image_argument(parsed: dict, argument: str) -> dict:
     if parsed["image_path"] is not None:
-        if parsed["mode"] == "hide" and parsed["message"] is None:
+        if "hide" in parsed["modes"] and parsed["message"] is None:
             parsed["message"] = argument
             return parsed
 
@@ -123,7 +128,7 @@ def parse_image_argument(parsed: dict, argument: str) -> dict:
 
 
 def validate_args(parsed: dict) -> None:
-    if parsed["mode"] is None:
+    if not parsed["modes"]:
         raise SystemExit("Error: choose -m, -s, or -h")
 
     if parsed["image_path"] is None:
@@ -131,7 +136,7 @@ def validate_args(parsed: dict) -> None:
 
     validate_source_image(parsed["image_path"])
 
-    if parsed["mode"] == "hide" and parsed["message"] is None:
+    if "hide" in parsed["modes"] and parsed["message"] is None:
         raise SystemExit("Error: missing message to hide in the image")
 
     if parsed["output"] is not None:
@@ -139,11 +144,14 @@ def validate_args(parsed: dict) -> None:
 
 
 def dispatch(parsed: dict) -> str:
-    if parsed["mode"] == "metadata":
+    if parsed["modes"] == {"metadata"}:
         return handle_metadata_analysis(parsed["image_path"], parsed["output"])
 
-    if parsed["mode"] == "steganography":
+    if parsed["modes"] == {"steganography"}:
         return handle_steganography_analysis(parsed["image_path"], parsed["output"])
+
+    if parsed["modes"] == {"metadata", "steganography"}:
+        return handle_combined_analysis(parsed["image_path"], parsed["output"])
 
     return handle_steganography_hide(parsed["image_path"], parsed["message"], parsed["output"])
 

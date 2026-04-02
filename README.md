@@ -10,6 +10,7 @@ PixelTrace is a small command-line tool for inspecting images. It can:
 
 - `-m` metadata mode
 - `-s` steganography extraction mode
+- combined `-m -s` analysis mode
 - `-h` / `--hide` steganography embedding mode
 - optional `-o` output file support
 
@@ -31,6 +32,8 @@ Run the CLI with:
 ```bash
 python3 main.py [option] <image_path> [message] [-o output_path]
 ```
+
+For combined analysis, you can use both `-m` and `-s` in the same command.
 
 ### Show Help
 
@@ -84,6 +87,14 @@ Save extracted hidden data to a file:
 python3 main.py -s sample_images/image-example-full.jpeg -o outputs/hidden.txt
 ```
 
+### Run Metadata and Steganography Together
+
+```bash
+python3 main.py -m -s sample_images/image-example1.jpeg -o outputs/results.txt
+```
+
+This produces one combined report with both metadata and hidden-data analysis.
+
 ### Hide a Message in an Image
 
 Hide a message with LSB steganography:
@@ -126,6 +137,14 @@ Hide mode stores the message in the RGB LSBs of the output image and appends a n
 - basic LSB techniques are not reliable with `JPEG` output because compression changes pixel values
 - the hide mode always saves a `PNG`
 - extraction includes a simple text-quality check to avoid displaying random garbage from images with no hidden payload
+
+## Ethical And Legal Use
+
+- Use this tool only on images you own or are explicitly authorized to analyze
+- Hidden-data analysis can expose sensitive or private information, so results should be handled carefully
+- In digital forensics contexts, keep records of where evidence came from and avoid modifying original files
+- Steganography features should not be used to conceal illegal, harmful, or unauthorized content
+- Laws and policies around image analysis, privacy, and evidence handling vary by organization and jurisdiction
 
 ## Project Structure
 
